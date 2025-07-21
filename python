@@ -1,0 +1,122 @@
+from flask import Flask, render_template, request, redirect, url_for
+
+
+
+app = Flask(__name__)
+
+students_data = []
+num_students = 0
+
+@app.route("/", methods=["GET", "POST"])
+def page1():
+    global num_students, students_data
+    if request.method == "POST":
+        num_students = int(request.form["num_students"])
+        students_data = []
+        return redirect(url_for("page2"))
+    return render_template("pagee1.html")
+
+@app.route("/students", methods=["GET", "POST"])
+def page2():
+    global students_data, num_students
+    error_messages = []
+
+    if request.method == "POST":
+        used_ids = set()
+        students_data = []
+
+        for i in range(num_students):
+            student_id = request.form[f"student_id_{i}"]
+            first_name = request.form[f"first_name_{i}"]
+            last_name = request.form[f"last_name_{i}"]
+
+            if not (student_id.isdigit() and len(student_id) == 9):
+                error_messages.append(f"Student {i + 1}: ID must be exactly 9 digits.")
+            elif student_id in used_ids:
+                error_messages.append(f"Student {i + 1}: Duplicate ID '{student_id}' found.")
+            else:
+                used_ids.add(student_id)
+
+            if not first_name.isalpha():
+                error_messages.append(f"Student {i + 1}: First name must contain only letters.")
+            if not last_name.isalpha():
+                error_messages.append(f"Student {i + 1}: Last name must contain only letters.")
+
+            try:
+                math = float(request.form[f"math_{i}"])
+                english = float(request.form[f"english_{i}"])
+                science = float(request.form[f"science_{i}"])
+            except ValueError:
+                error_messages.append(f"Student {i + 1}: Invalid numeric scores.")
+
+            student = {
+                "ID": student_id,
+                "First Name": first_name,
+                "Last Name": last_name,
+                "Math": float(request.form.get(f"math_{i}", 0)),
+                "English": float(request.form.get(f"english_{i}", 0)),
+                "Science": float(request.form.get(f"science_{i}", 0)),
+            }
+            students_data.append(student)
+
+        if error_messages:
+            return render_template("pagee2.html", num_students=num_students, error_messages=error_messages)
+
+        return redirect(url_for("page3"))
+
+    return render_template("pagee2.html", num_students=num_students, error_messages=[])
+
+def assign_grade(avg):
+    if avg >= 70:
+        return "A"
+    elif avg >= 60:
+        return "B"
+    elif avg >= 50:
+        return "C"
+    elif avg >= 40:
+        return "D"
+    else:
+        return "F"
+
+def assign_remark(grade):
+    remarks = {
+        "A": "Excellent",
+        "B": "Very Good",
+        "C": "Good",
+        "D": "Fair",
+        "F": "Fail"
+    }
+    return remarks.get(grade, "")
+
+@app.route("/results")
+def page3():
+    print("DEBUG - students_data:", students_data)  # 👈 See what's there
+
+    summary = []
+    for record in students_data:
+        total = record["Math"] + record["English"] + record["Science"]
+        average = total / 3
+        grade = assign_grade(average)
+        remark = assign_remark(grade)
+
+        student_record = {
+            **record,
+            "Total": total,
+            "Average": round(average, 2),
+            "Grade": grade,
+            "Remark": remark
+        }
+        summary.append(student_record)
+
+    ranked = sorted(summary, key=lambda x: x["Average"], reverse=True)
+    class_avg = round(sum(s["Average"] for s in ranked) / len(ranked), 2) if ranked else 0
+
+    return render_template("pagee3.html", students=ranked, class_avg=class_avg)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+

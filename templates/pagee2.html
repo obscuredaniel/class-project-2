@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enter Student Results</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Enter Student Results</h1>
+
+    <form action="{{ url_for('page2') }}" method="post">
+      {% if error_messages %}
+    <div class="error-box">
+      <ul>
+        {% for error in error_messages %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+
+      {% for i in range(num_students) %}
+        <h3>Student {{ i+1 }}</h3>
+
+        <label for="student_id_{{i}}">Student ID</label>
+       <input type="text" id="student_id_{{i}}" name="student_id_{{i}}" pattern="^\d{9}$" title="ID must be exactly 9 digits" maxlength="9" required>
+
+
+        <label for="first_name_{{i}}">First Name</label>
+        <input type="text" id="first_name_{{i}}" name="first_name_{{i}}" required>
+
+        <label for="last_name_{{i}}">Last Name</label>
+        <input type="text" id="last_name_{{i}}" name="last_name_{{i}}" required>
+
+        <label for="math_{{i}}">Math Score</label>
+       <input type="number" id="math_{{i}}" name="math_{{i}}" min="1" max="100" required>
+
+        <label for="english_{{i}}">English Score</label>
+       <input type="number" id="english_{{i}}" name="english_{{i}}" min="1" max="100" required>
+
+        <label for="science_{{i}}">Science Score</label>
+       <input type="number" id="science_{{i}}" name="science_{{i}}" min="1" max="100" required>
+      {% endfor %}
+
+      <button type="submit">Submit All Results</button>
+      <button type="button" onclick="window.history.back()">Go Back</button>
+
+    </form>
+  </div>
+
+</body>
+</html>
+
